@@ -31,7 +31,7 @@ x-ibm-configuration:
         case:
         - operations:
           - verb: "get"
-            path: "/genJWT"
+            path: "/genJWTTest"
           execute:
           - jwt-gen-custom:
               version: "1.0.2"
