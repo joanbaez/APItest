@@ -1,24 +1,23 @@
----
-swagger: "2.0"
+swagger: '2.0'
 info:
-  x-ibm-name: "testpolticasseguridad"
-  title: "TestPolíticasSeguridad"
-  version: "1.0.0"
+  x-ibm-name: testpolticasseguridad
+  title: TestPolíticasSeguridad
+  version: 1.0.0
 schemes:
-- "https"
-host: "$(catalog.host)"
-basePath: "/testpolticasseguridad"
+  - https
+host: $(catalog.host)
+basePath: /testpolticasseguridad
 consumes:
-- "application/json"
+  - application/json
 produces:
-- "application/json"
+  - application/json
 securityDefinitions:
   clientIdHeader:
-    type: "apiKey"
-    in: "header"
-    name: "X-IBM-Client-Id"
+    type: apiKey
+    in: header
+    name: X-IBM-Client-Id
 security:
-- clientIdHeader: []
+  - clientIdHeader: []
 x-ibm-configuration:
   testable: true
   enforced: true
@@ -26,250 +25,311 @@ x-ibm-configuration:
     enabled: true
   assembly:
     execute:
-    - operation-switch:
-        title: "operation-switch"
-        case:
-        - operations:
-          - verb: "get"
-            path: "/genJWTTest"
-          execute:
-          - jwt-gen-custom:
-              version: "1.0.2"
-              user: "Client-ID"
-              iss: "iss"
-              aud: "aud"
-          - gatewayscript:
-              title: "gatewayscript"
-              source: "var tokenGenerado = apim.getvariable('message.headers.authorization');\n\
-                var TestStatus = {TestStatus : 'Token JWT generado  correctamente'};\n\
-                var out = {};\nif (tokenGenerado){\n    out.TestStatus = TestStatus;\n\
-                \    out.tokenGenerado = tokenGenerado;\n    try {\n        var headerJWT\
-                \ = JSON.parse(new Buffer(tokenGenerado.split('.')[0].split(' ')[1],\
-                \ 'base64').toString(\"ascii\"));\n        var payloadJWT = JSON.parse(new\
-                \ Buffer(tokenGenerado.split('.')[1], 'base64').toString(\"ascii\"\
-                ));; \n        out.headerJWT = headerJWT;\n        out.payloadJWT\
-                \ = payloadJWT;\n    }\n    catch(err) {\n        out.error = 'error\
-                \ al tratar decodificar el token generado';\n    }\n}\napim.output('application/json');\n\
-                session.output.write(out);"
-        - operations:
-          - verb: "get"
-            path: "/valJWT"
-          execute:
-          - jwt-gen-custom:
-              version: "1.0.2"
-              user: "Client-ID"
-              iss: "ISS"
-              aud: "AUD"
-          - jwt-val-custom:
-              version: "1.0.2"
-          - gatewayscript:
-              title: "gatewayscript"
-              source: "var tokenGenerado = apim.getvariable('message.headers.authorization');\n\
-                var TestStatus = {TestStatus : 'Token JWT validado correctamente'};\n\
-                var out = {};\nout.TestStatus = TestStatus;\nout.tokenGenerado = tokenGenerado;\n\
-                apim.output('application/json');\nsession.output.write(out);"
-        - operations:
-          - verb: "get"
-            path: "/genBKS"
-          execute:
-          - token-banksphere:
-              version: "1.0.2"
-              user: "ApiManager-ID"
-          - gatewayscript:
-              title: "gatewayscript"
-              source: "var valueTokenBKS = apim.getvariable('valueTokenBKS');\r\n\
-                var TestStatus = {TestStatus : 'Token BKS validado correctamente'};\r\
-                \nvar buf = new Buffer(valueTokenBKS, 'base64').toString(\"ascii\"\
-                );\r\n\r\nvar out = {\r\nTestStatus : TestStatus,\r\ntokenBKSgenerado:\
-                \ valueTokenBKS,\r\nBKSdecode: buf\r\n};\r\n\r\napim.setvariable('message.status.code',\
-                \ 200);\r\napim.output('application/json');\r\nsession.output.write(out);"
-        - operations:
-          - verb: "get"
-            path: "/JWTtoBKS"
-          execute:
-          - jwt-gen-custom:
-              version: "1.0.2"
-              user: "ApiManager-ID"
-              iss: "ISS"
-              aud: "AUD"
-          - gatewayscript:
-              title: "gatewayscript"
-              source: "apim.setvariable('request.headers.authorization', apim.getvariable('message.headers.authorization'));"
-          - jwt-to-bks:
-              version: "1.0.2"
-              user: "ApiManager-ID"
-              privkey: "$(privKey)"
-          - gatewayscript:
-              title: "gatewayscript"
-              source: "var valueTokenBKS = apim.getvariable('valueTokenBKS');\nvar\
-                \ TestStatus = {TestStatus : 'Token JWT y BKS generados correctamente'};\n\
-                var buf = new Buffer(valueTokenBKS, 'base64').toString(\"ascii\");\n\
-                \nvar out = {\nTestStatus: TestStatus,\ntokenBKS_Generado : valueTokenBKS,\n\
-                decoded: buf\n};\n\napim.output('application/json');\nsession.output.write(out);"
-        - operations:
-          - verb: "get"
-            path: "/JWTtoJWT"
-          execute:
-          - jwt-to-jwt:
-              version: "1.0.2"
-              aud: "AUD2"
-          - gatewayscript:
-              title: "gatewayscript"
-              source: "var token = apim.getvariable('message.headers.authorization');\n\
-                var TestStatus = {TestStatus : 'Token JWT cambiado de audiencia correctamente'};\n\
-                var out = {};\nif (token){\n    out.TestStatus =TestStatus;\n    out.token\
-                \ = token;\n    try {\n        var headerJWT = JSON.parse(new Buffer(token.split('.')[0].split('\
-                \ ')[1], 'base64').toString(\"ascii\"));\n        var payloadJWT =\
-                \ JSON.parse(new Buffer(token.split('.')[1], 'base64').toString(\"\
-                ascii\"));; \n        out.headerJWT = headerJWT;\n        out.payloadJWT\
-                \ = payloadJWT;\n    }\n    catch(err) {\n        out.error = 'error\
-                \ al tratar el token';\n    }\n}\napim.output('application/json');\n\
-                session.output.write(out);"
-        - operations:
-          - verb: "get"
-            path: "/oauthCC"
-          execute:
-          - oauth-client-credentials:
-              version: "1.0.2"
-              scope: "corporate_tables.read"
-          - gatewayscript:
-              title: "gatewayscript"
-              source: "var out = {\"oauthCC\":\"OK\"};\r\napim.output('application/json');\r\
-                \nsession.output.write(out);"
-        - operations:
-          - verb: "get"
-            path: "/oauthROP"
-          execute:
-          - oauth-resource-owner-password-credentials:
-              version: "2.0.0"
-              scope: "corporate_tables.read"
-          - gatewayscript:
-              title: "gatewayscript"
-              source: "var out = {\"oauthROP\":\"OK\"};\r\napim.output('application/json');\r\
-                \nsession.output.write(out);"
-        otherwise: []
+      - operation-switch:
+          title: operation-switch
+          case:
+            - operations:
+                - verb: get
+                  path: /genJWTTest
+              execute:
+                - jwt-gen-custom:
+                    version: 1.0.2
+                    user: Client-ID
+                    iss: iss
+                    aud: aud
+                - gatewayscript:
+                    title: gatewayscript
+                    source: >-
+                      var tokenGenerado =
+                      apim.getvariable('message.headers.authorization');
+
+                      var TestStatus = {TestStatus : 'Token JWT generado 
+                      correctamente'};
+
+                      var out = {};
+
+                      if (tokenGenerado){
+                          out.TestStatus = TestStatus;
+                          out.tokenGenerado = tokenGenerado;
+                          try {
+                              var headerJWT = JSON.parse(new Buffer(tokenGenerado.split('.')[0].split(' ')[1], 'base64').toString("ascii"));
+                              var payloadJWT = JSON.parse(new Buffer(tokenGenerado.split('.')[1], 'base64').toString("ascii"));; 
+                              out.headerJWT = headerJWT;
+                              out.payloadJWT = payloadJWT;
+                          }
+                          catch(err) {
+                              out.error = 'error al tratar decodificar el token generado';
+                          }
+                      }
+
+                      apim.output('application/json');
+
+                      session.output.write(out);
+            - operations:
+                - verb: get
+                  path: /valJWT
+              execute:
+                - jwt-gen-custom:
+                    version: 1.0.2
+                    user: Client-ID
+                    iss: ISS
+                    aud: AUD
+                - jwt-val-custom:
+                    version: 1.0.2
+                - gatewayscript:
+                    title: gatewayscript
+                    source: >-
+                      var tokenGenerado =
+                      apim.getvariable('message.headers.authorization');
+
+                      var TestStatus = {TestStatus : 'Token JWT validado
+                      correctamente'};
+
+                      var out = {};
+
+                      out.TestStatus = TestStatus;
+
+                      out.tokenGenerado = tokenGenerado;
+
+                      apim.output('application/json');
+
+                      session.output.write(out);
+            - operations:
+                - verb: get
+                  path: /genBKS
+              execute:
+                - token-banksphere:
+                    version: 1.0.2
+                    user: ApiManager-ID
+                - gatewayscript:
+                    title: gatewayscript
+                    source: "var valueTokenBKS = apim.getvariable('valueTokenBKS');\r\nvar TestStatus = {TestStatus : 'Token BKS validado correctamente'};\r\nvar buf = new Buffer(valueTokenBKS, 'base64').toString(\"ascii\");\r\n\r\nvar out = {\r\nTestStatus : TestStatus,\r\ntokenBKSgenerado: valueTokenBKS,\r\nBKSdecode: buf\r\n};\r\n\r\napim.setvariable('message.status.code', 200);\r\napim.output('application/json');\r\nsession.output.write(out);"
+            - operations:
+                - verb: get
+                  path: /JWTtoBKS
+              execute:
+                - jwt-gen-custom:
+                    version: 1.0.2
+                    user: ApiManager-ID
+                    iss: ISS
+                    aud: AUD
+                - gatewayscript:
+                    title: gatewayscript
+                    source: >-
+                      apim.setvariable('request.headers.authorization',
+                      apim.getvariable('message.headers.authorization'));
+                - jwt-to-bks:
+                    version: 1.0.2
+                    user: ApiManager-ID
+                    privkey: $(privKey)
+                - gatewayscript:
+                    title: gatewayscript
+                    source: >-
+                      var valueTokenBKS = apim.getvariable('valueTokenBKS');
+
+                      var TestStatus = {TestStatus : 'Token JWT y BKS generados
+                      correctamente'};
+
+                      var buf = new Buffer(valueTokenBKS,
+                      'base64').toString("ascii");
+
+
+                      var out = {
+
+                      TestStatus: TestStatus,
+
+                      tokenBKS_Generado : valueTokenBKS,
+
+                      decoded: buf
+
+                      };
+
+
+                      apim.output('application/json');
+
+                      session.output.write(out);
+            - operations:
+                - verb: get
+                  path: /JWTtoJWT
+              execute:
+                - jwt-to-jwt:
+                    version: 1.0.2
+                    aud: AUD2
+                - gatewayscript:
+                    title: gatewayscript
+                    source: >-
+                      var token =
+                      apim.getvariable('message.headers.authorization');
+
+                      var TestStatus = {TestStatus : 'Token JWT cambiado de
+                      audiencia correctamente'};
+
+                      var out = {};
+
+                      if (token){
+                          out.TestStatus =TestStatus;
+                          out.token = token;
+                          try {
+                              var headerJWT = JSON.parse(new Buffer(token.split('.')[0].split(' ')[1], 'base64').toString("ascii"));
+                              var payloadJWT = JSON.parse(new Buffer(token.split('.')[1], 'base64').toString("ascii"));; 
+                              out.headerJWT = headerJWT;
+                              out.payloadJWT = payloadJWT;
+                          }
+                          catch(err) {
+                              out.error = 'error al tratar el token';
+                          }
+                      }
+
+                      apim.output('application/json');
+
+                      session.output.write(out);
+            - operations:
+                - verb: get
+                  path: /oauthCC
+              execute:
+                - oauth-client-credentials:
+                    version: 1.0.2
+                    scope: corporate_tables.read
+                - gatewayscript:
+                    title: gatewayscript
+                    source: "var out = {\"oauthCC\":\"OK\"};\r\napim.output('application/json');\r\nsession.output.write(out);"
+            - operations:
+                - verb: get
+                  path: /oauthROP
+              execute:
+                - oauth-resource-owner-password-credentials:
+                    version: 2.0.0
+                    scope: corporate_tables.read
+                - gatewayscript:
+                    title: gatewayscript
+                    source: "var out = {\"oauthROP\":\"OK\"};\r\napim.output('application/json');\r\nsession.output.write(out);"
+          otherwise: []
     catch: []
-  phase: "realized"
+  phase: realized
   properties:
     privKey:
-      value: "jwt-gen-custom-private-key_apim_e58a22aa90cf2ff3b948c089e_v1.0.2"
-      description: ""
+      value: jwt-gen-custom-private-key_apim_e58a22aa90cf2ff3b948c089e_v1.0.2
+      description: ''
       encoded: false
     jwk-file:
-      value: "local:///policy/e59de8f060cf27afea57cb145/jwt-val-custom_v1.0.2/"
-      description: ""
+      value: 'local:///policy/e59de8f060cf27afea57cb145/jwt-val-custom_v1.0.2/'
+      description: ''
       encoded: false
   catalogs:
     Intranet-Client:
       properties:
-        privKey: "jwt-gen-custom-private-key_apim_e58331ec6e4b0bdf94ebc9f54_v1.0.2"
+        privKey: jwt-gen-custom-private-key_apim_e58331ec6e4b0bdf94ebc9f54_v1.0.2
     DEV:
       properties:
-        privKey: "jwt-gen-custom-private-key_apim_e58501220e4b0bdf94ec820de_v1.0.2"
+        privKey: jwt-gen-custom-private-key_apim_e58501220e4b0bdf94ec820de_v1.0.2
     Internet-Backend-Client:
       properties:
-        jwk-file: "local:///policy/e5937d3bce4b00a938e843b7d/jwt-val-custom_v1.0.2/"
-        privKey: "jwt-gen-custom-private-key_apim_e5937d3bce4b00a938e843b7d_v1.0.2"
+        jwk-file: 'local:///policy/e5937d3bce4b00a938e843b7d/jwt-val-custom_v1.0.2/'
+        privKey: jwt-gen-custom-private-key_apim_e5937d3bce4b00a938e843b7d_v1.0.2
     Internet:
       properties:
-        jwk-file: "local:///policy/e5937d3abe4b00a938e843b76/jwt-val-custom_v1.0.2/"
-        privKey: "jwt-gen-custom-private-key_apim_e5937d3bce4b00a938e843b7d_v1.0.2"
+        jwk-file: 'local:///policy/e5937d3abe4b00a938e843b76/jwt-val-custom_v1.0.2/'
+        privKey: jwt-gen-custom-private-key_apim_e5937d3bce4b00a938e843b7d_v1.0.2
 paths:
   /oauthROP:
     get:
       responses:
-        200:
-          description: "200 OK"
+        '200':
+          description: 200 OK
       parameters:
-      - $ref: "#/parameters/Accept-Language"
-      - $ref: "#/parameters/X-Santander-Device"
-      - $ref: "#/parameters/Authorization"
-      - $ref: "#/parameters/X-Santander-Global-Id"
-      - $ref: "#/parameters/X-IBM-Client-Id"
-      - $ref: "#/parameters/Content-Type"
+        - $ref: '#/parameters/Accept-Language'
+        - $ref: '#/parameters/X-Santander-Device'
+        - $ref: '#/parameters/Authorization'
+        - $ref: '#/parameters/X-Santander-Global-Id'
+        - $ref: '#/parameters/X-IBM-Client-Id'
+        - $ref: '#/parameters/Content-Type'
   /oauthCC:
     get:
       responses:
-        200:
-          description: "200 OK"
+        '200':
+          description: 200 OK
       parameters:
-      - $ref: "#/parameters/Accept-Language"
-      - $ref: "#/parameters/X-Santander-Device"
-      - $ref: "#/parameters/Authorization"
-      - $ref: "#/parameters/X-Santander-Global-Id"
-      - $ref: "#/parameters/X-IBM-Client-Id"
-      - $ref: "#/parameters/Content-Type"
+        - $ref: '#/parameters/Accept-Language'
+        - $ref: '#/parameters/X-Santander-Device'
+        - $ref: '#/parameters/Authorization'
+        - $ref: '#/parameters/X-Santander-Global-Id'
+        - $ref: '#/parameters/X-IBM-Client-Id'
+        - $ref: '#/parameters/Content-Type'
   /genBKS:
     get:
       responses:
-        200:
-          description: "200 OK"
+        '200':
+          description: 200 OK
   /JWTtoBKS:
     get:
       responses:
-        200:
-          description: "200 OK"
+        '200':
+          description: 200 OK
   /JWTtoJWT:
     get:
       responses:
-        200:
-          description: "200 OK"
+        '200':
+          description: 200 OK
   /valJWT:
     get:
       responses:
-        200:
-          description: "200 OK"
+        '200':
+          description: 200 OK
   /genJWT:
     get:
       responses:
-        200:
-          description: "200 OK"
+        '200':
+          description: 200 OK
 definitions: {}
 tags: []
 parameters:
   Accept-Language:
-    name: "Accept-Language"
-    type: "string"
+    name: Accept-Language
+    type: string
     required: false
-    in: "header"
-    description: "Define the language list of customer in preferred order. This API\
-      \ will respond in Content-Language header the language used in the response"
+    in: header
+    description: >-
+      Define the language list of customer in preferred order. This API will
+      respond in Content-Language header the language used in the response
   Authorization:
-    name: "Authorization"
-    type: "string"
+    name: Authorization
+    type: string
     required: true
-    in: "header"
-    description: "Header for Access Token, OAuth2 format"
+    in: header
+    description: 'Header for Access Token, OAuth2 format test'
   X-Santander-Global-Id:
-    name: "X-Santander-Global-Id"
-    type: "string"
+    name: X-Santander-Global-Id
+    type: string
     required: true
-    in: "header"
-    description: "Header for traceability, this value must be get from API - Global\
-      \ Security Identification"
+    in: header
+    description: >-
+      Header for traceability, this value must be get from API - Global Security
+      Identification
   X-Santander-Device:
-    name: "X-Santander-Device"
-    type: "string"
+    name: X-Santander-Device
+    type: string
     required: false
-    in: "header"
-    description: "Header to identify the device to request the API, for example: Mobile\
-      \ Browser, Tablet, Watch, etc. by Default Internet Browser for Mac/PC"
+    in: header
+    description: >-
+      Header to identify the device to request the API, for example: Mobile
+      Browser, Tablet, Watch, etc. by Default Internet Browser for Mac/PC
   MsgRqHdr:
-    name: "MsgRqHdr"
-    type: "string"
+    name: MsgRqHdr
+    type: string
     required: false
-    in: "header"
-    description: "Header to identify additional data into the request. For this release\
-      \ is not necessary"
+    in: header
+    description: >-
+      Header to identify additional data into the request. For this release is
+      not necessary
   Content-Type:
-    name: "Content-Type"
-    type: "string"
+    name: Content-Type
+    type: string
     required: false
-    in: "header"
-    description: "Define the content type"
+    in: header
+    description: Define the content type
   X-IBM-Client-Id:
-    name: "X-IBM-Client-Id"
-    type: "string"
+    name: X-IBM-Client-Id
+    type: string
     required: true
-    in: "header"
-    description: "Header to identify the applcation to request the API"
+    in: header
+    description: Header to identify the applcation to request the API
