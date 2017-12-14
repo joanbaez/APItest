@@ -41,7 +41,7 @@ x-ibm-configuration:
           - gatewayscript:
               title: "gatewayscript"
               source: "var tokenGenerado = apim.getvariable('message.headers.authorization');\n\
-                var TestStatus = {TestStatus : 'Token JWT generado correctamente'};\n\
+                var TestStatus = {TestStatus : 'Token JWT generado  correctamente'};\n\
                 var out = {};\nif (tokenGenerado){\n    out.TestStatus = TestStatus;\n\
                 \    out.tokenGenerado = tokenGenerado;\n    try {\n        var headerJWT\
                 \ = JSON.parse(new Buffer(tokenGenerado.split('.')[0].split(' ')[1],\
